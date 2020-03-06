@@ -1,9 +1,13 @@
 import gym
-from gym import spaces
-import numpy as np
+import keyboard
+import numpy        as np
 import time 
+
+from gym            import spaces
+
 from camera_handler import PiCamera
-from car import Car  
+from car            import Car 
+
 
 WIDTH,HEIGHT,CHANNEL = 299,299,3
 LATENCE_START = 2.0
@@ -23,6 +27,7 @@ class CarEnv(gym.Env):
 
         self.current_step = 0
         self.episode = 1
+        self.current_chrono = time.now()
 
         self.time_step = TIME_STEP
         self.time_between_episode = TIME_BETWEEN_EPISODE
@@ -30,7 +35,6 @@ class CarEnv(gym.Env):
         self.action_space = spaces.MultiDiscrete([3,2])
 
         self.training = True 
-        self.reward_range = (-2,2)
 
         self.observation_space = spaces.Box(low=-1.0, high=1.0, shape=(WIDTH,HEIGHT,CHANNEL), dtype=np.float16)
 
@@ -62,10 +66,21 @@ class CarEnv(gym.Env):
         time.sleep(self.time_step)
         self.current_step += 1 
 
-        #####
-        #% How to handle the end of an episode? 
-        #####
-        done = None
+        if keyboard.is_pressed('s'):
+            print('s pressed: Stopping episode because of a failure. You now have 30 seconds to replace the car.')
+            print('This episode lasted for {} seconds'.format((time.now() - self.current_chrono)))
+            print('Reward := {}'.format(-1))
+            done = True
+            reward = -1
+        elif keyboard.is_pressed('e'):
+            print('e pressed: Ending episode because of a success. You now have 30 seconds to replace the car.')
+            print('This episode lasted for {} seconds'.format((time.now() - self.current_chrono)))
+            done = True 
+            reward = 10. - (time.now() - self.current_chrono)/100.
+            print('Reward := {}'.format(reward))
+        else:
+            done = False
+            reward = 0.1
 
         #####
         #% How to handle the reward computation?
@@ -73,6 +88,7 @@ class CarEnv(gym.Env):
         reward = None 
 
         obs = self._next_observation()
+        if done: print('You can now move the car')
         return obs, reward, done, {}
 
     def reset(self):
@@ -80,6 +96,8 @@ class CarEnv(gym.Env):
         self.current_step = 0
         self.episode += 1 
 
+        self.current_chrono = time.now()
         self.car = Car()
         time.sleep(self.time_between_episode)
         return self._next_observation()
+
