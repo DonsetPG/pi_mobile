@@ -8,8 +8,7 @@ from gym            import spaces
 from camera_handler import PiCamera
 from car            import Car 
 
-
-WIDTH,HEIGHT,CHANNEL = 299,299,3
+WIDTH,HEIGHT,CHANNEL = 224,224,3
 LATENCE_START = 2.0
 TIME_STEP = 0.5
 TIME_BETWEEN_EPISODE = 10
